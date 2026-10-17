@@ -1269,6 +1269,9 @@ void CMD_Init_Delayed() {
 	BL0942_AddCommands();
 #endif
 #endif
+#if ENABLE_DRIVER_DHT
+	DHT_AddCommands();
+#endif
 }
 
 

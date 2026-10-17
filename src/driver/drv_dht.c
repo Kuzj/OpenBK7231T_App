@@ -12,6 +12,36 @@
 
 // per-pin devices
 static dht_t **g_dhts = 0;
+static int g_dht_secondsBetween = 1;
+static int g_dht_secondsUntilNext = 0;
+
+static commandResult_t CMD_DHT_Cycle(const void* context, const char* cmd, const char* args, int cmdFlags)
+{
+	int seconds;
+
+	Tokenizer_TokenizeString(args, 0);
+	if (Tokenizer_CheckArgsCountAndPrintWarning(cmd, 1)) {
+		return CMD_RES_NOT_ENOUGH_ARGUMENTS;
+	}
+	seconds = Tokenizer_GetArgInteger(0);
+	if (seconds < 1) {
+		ADDLOG_INFO(LOG_FEATURE_CMD, "DHT_Cycle: interval must be at least 1 second.");
+		return CMD_RES_BAD_ARGUMENT;
+	}
+	g_dht_secondsBetween = seconds;
+	g_dht_secondsUntilNext = 0;
+	ADDLOG_INFO(LOG_FEATURE_CMD, "DHT_Cycle: measurement will run every %i seconds.", g_dht_secondsBetween);
+	return CMD_RES_OK;
+}
+
+void DHT_AddCommands()
+{
+	//cmddetail:{"name":"DHT_Cycle","args":"[IntervalSeconds]",
+	//cmddetail:"descr":"Interval between DHT11/DHT22 reads in seconds. Default is 1, which keeps the previous every-second poll. The sensor itself needs about 2 seconds between real conversions.",
+	//cmddetail:"fn":"CMD_DHT_Cycle","file":"driver/drv_dht.c","requires":"",
+	//cmddetail:"examples":"DHT_Cycle 60"}
+	CMD_RegisterCommand("DHT_Cycle", CMD_DHT_Cycle, NULL);
+}
 
 int translateDHTType(int role) {
 	if (role == IOR_DHT11)
@@ -70,6 +100,14 @@ void DHT_OnPinsConfigChanged() {
 }
 void DHT_OnEverySecond() {
 	int i;
+
+	if (g_dht_secondsBetween > 1) {
+		if (g_dht_secondsUntilNext > 0) {
+			g_dht_secondsUntilNext--;
+			return;
+		}
+		g_dht_secondsUntilNext = g_dht_secondsBetween - 1;
+	}
 
 	for (i = 0; i < PLATFORM_GPIO_MAX; i++) {
 		if (IS_PIN_DHT_ROLE(g_cfg.pins.roles[i])) {

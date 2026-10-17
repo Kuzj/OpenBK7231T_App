@@ -55,6 +55,7 @@ void DRV_AppendInformationToHTTPIndexPage(http_request_t* request, int bPreState
 void DRV_OnEverySecond();
 void DHT_OnEverySecond();
 void DHT_OnPinsConfigChanged();
+void DHT_AddCommands();
 void DRV_RunQuickTick();
 void DRV_StartDriver(const char* name);
 void DRV_StopDriver(const char* name);
