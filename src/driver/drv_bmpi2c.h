@@ -581,13 +581,19 @@ void BMX280_Update()
 
 	adc_T = adc >> 4;
 
+	Soft_I2C_Stop(&g_softI2C);
+
 	if(IsBME280)
 	{
+		Soft_I2C_Start(&g_softI2C, g_softI2C.address8bit);
+		Soft_I2C_WriteByte(&g_softI2C, BMX280_REG_HUMDATA);
+		Soft_I2C_Stop(&g_softI2C);
+		Soft_I2C_Start(&g_softI2C, g_softI2C.address8bit | 1);
 		uint8_t data1 = BMP_Read(1);
 		uint8_t data2 = BMP_Read(0);
 		adc_H = ((data1 & 0xFF) << 8) | (data2 & 0xFF);
+		Soft_I2C_Stop(&g_softI2C);
 	}
-	Soft_I2C_Stop(&g_softI2C);
 }
 
 int32_t BMX280_ReadTemperature()
